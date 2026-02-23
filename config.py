@@ -43,6 +43,8 @@ TARGET_URLS = {
     'us_state_dept': 'https://travel.state.gov/content/travel/en/traveladvisories/traveladvisories.html',
     'uk_fcdo': 'https://www.gov.uk/foreign-travel-advice',
     'smartraveller': 'https://www.smartraveller.gov.au/destinations',
+    'un_reliefweb': 'https://reliefweb.int/',
+    'crisisgroup': 'https://www.crisisgroup.org/',
     'iata': 'https://www.iatatravelcentre.com/world.php',
     'canada': 'https://travel.gc.ca/travelling/advisories'  # Additional source
 }

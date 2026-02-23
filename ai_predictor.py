@@ -160,20 +160,41 @@ class InsightAnalyzer:
 
     def _risk_grade_from_score(self, score: Optional[float]) -> str:
         """
-        Map numeric risk (1–4) into A–E where:
-        A = lowest risk, E = highest risk
+        Map numeric risk (1–4) into a letter grade A–E.
+
+        A is lowest risk, E is highest risk.
+        Uses threshold-based mapping:
+        - 1.0 ≤ score < 1.5 → A
+        - 1.5 ≤ score < 2.5 → B
+        - 2.5 ≤ score < 3.5 → C
+        - 3.5 ≤ score < 4.0 → D
+        - score ≥ 4.0 → E
+        
+        Scores outside the 1–4 range are clamped.
+        None or invalid values return "U" (unknown).
         """
         if score is None:
             return "U"  # Unknown
-        if score < 1.5:
+
+        try:
+            s = float(score)
+        except Exception:
+            return "U"
+
+        # clamp to expected range
+        s = max(1.0, min(s, 4.0))
+        
+        # threshold-based mapping
+        if s < 1.5:
             return "A"
-        if score < 2.5:
+        elif s < 2.5:
             return "B"
-        if score < 3.0:
+        elif s < 3.5:
             return "C"
-        if score < 3.5:
+        elif s < 4.0:
             return "D"
-        return "E"
+        else:
+            return "E"
 
     def attach_dimensions(self, advisories: List[Dict]) -> List[Dict]:
         """

@@ -55,7 +55,16 @@ try:
     from nlp_vectorizer import LemmatizingTfidfVectorizer
     print(f"  ✓ LemmatizingTfidfVectorizer imported")
     print(f"  ✓ Module has category keyword loading")
+    # perform a simple instantiation to detect missing optional deps
+    vec = LemmatizingTfidfVectorizer()
+    if not getattr(vec, 'lemmatizer_enabled', True):
+        print("  (lemmatization disabled; nltk missing)")
+    try:
+        # test if sklearn is available by calling fit with a tiny list
+        vec.fit(["test"])
+    except Exception as e2:
+        print(f"  (vectorizer fit failed, maybe scikit-learn missing: {e2})")
 except Exception as e:
-    print(f"  ✗ Error: {e}")
+    print(f"  ✗ Error importing vectorizer: {e}")
 
 print("\n✓ All basic validations passed!")

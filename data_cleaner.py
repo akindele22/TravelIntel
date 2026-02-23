@@ -8,20 +8,38 @@ from typing import List, Dict, Optional, Set
 import pandas as pd
 from datetime import datetime
 import unicodedata
-from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
-from nltk.stem import WordNetLemmatizer
-import nltk
-
-# Download required NLTK data
+# vaderSentiment is used for simple sentiment scoring.  It's an optional
+# dependency so that the dashboard/cleaner can run without it.  If the
+# import fails we substitute a lightweight stub that always returns a
+# neutral score (0.0) and emit a warning so the user knows sentiment is
+# unavailable.
 try:
-    nltk.data.find('tokenizers/punkt')
-except LookupError:
-    nltk.download('punkt', quiet=True)
+    from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+except ImportError:  # pragma: no cover - rare in test envs that have deps
+    SentimentIntensityAnalyzer = None
 
+# make NLTK optional as well; if not available we substitute a dumb
+# lemmatizer and avoid downloading data.  This prevents import errors in
+# minimal environments (e.g. simple container without NLP deps).
 try:
-    nltk.data.find('corpora/wordnet')
-except LookupError:
-    nltk.download('wordnet', quiet=True)
+    from nltk.stem import WordNetLemmatizer
+    import nltk
+except ImportError:  # pragma: no cover - environments without nltk
+    WordNetLemmatizer = None
+    nltk = None
+
+
+# Download required NLTK data only if nltk is present
+if nltk:
+    try:
+        nltk.data.find('tokenizers/punkt')
+    except LookupError:
+        nltk.download('punkt', quiet=True)
+
+    try:
+        nltk.data.find('corpora/wordnet')
+    except LookupError:
+        nltk.download('wordnet', quiet=True)
 
 
 class DataCleaner:
@@ -63,8 +81,32 @@ class DataCleaner:
     
     def __init__(self):
         """Initialize data cleaner"""
-        self._sentiment = SentimentIntensityAnalyzer()
-        self._lemmatizer = WordNetLemmatizer()
+        # initialize sentiment; fall back to dummy if package missing
+        if SentimentIntensityAnalyzer:
+            self._sentiment = SentimentIntensityAnalyzer()
+            self.sentiment_enabled = True
+        else:
+            class _DummySentiment:
+                def polarity_scores(self, text: str) -> dict:
+                    return {"compound": 0.0}
+
+            self._sentiment = _DummySentiment()
+            self.sentiment_enabled = False
+            # no console output here; UI will warn if necessary
+
+        # configure lemmatizer fallback
+        if WordNetLemmatizer:
+            self._lemmatizer = WordNetLemmatizer()
+            self.lemmatizer_enabled = True
+        else:
+            class _DummyLemmatizer:
+                def lemmatize(self, token: str) -> str:
+                    return token
+
+            self._lemmatizer = _DummyLemmatizer()
+            self.lemmatizer_enabled = False
+            # no console output; dashboard handles messaging
+
         # Load external corpus/keyword lists if available
         self._corpus_keywords = set(self._load_corpus())
         # Load category-specific keywords

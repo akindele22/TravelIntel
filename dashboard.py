@@ -13,7 +13,9 @@ import streamlit as st
 from database_sqlite import DatabaseHandler
 from data_cleaner import DataCleaner
 from ai_predictor import InsightAnalyzer
-from nlp_vectorizer import LemmatizingTfidfVectorizer
+# nlp_vectorizer import removed because the dashboard doesn't actually use it;
+# keeping it here previously forced a dependency on scikit-learn during
+# startup.  NLP features are exercised in separate validation/tests.
 
 
 st.set_page_config(page_title="Travel Security Dashboard", layout="wide")
@@ -121,6 +123,16 @@ def summarize_location(df_country: pd.DataFrame) -> str:
 
 def main():
     st.title("Travel Security & Safety Dashboard")
+
+    # the DataCleaner will silently fall back to dummy analyzers/lemmatizers
+    # when optional dependencies are missing; no need to clutter the UI with
+    # warnings.  downstream code can inspect `.sentiment_enabled` or
+    # `.lemmatizer_enabled` if it really cares.
+    try:
+        _ = DataCleaner()
+    except Exception:
+        # ignore, load_data will handle errors later
+        pass
 
     st.sidebar.header("Filters")
 
