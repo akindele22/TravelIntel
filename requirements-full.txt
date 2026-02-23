@@ -1,0 +1,10 @@
+# Full requirements including heavy ML packages
+# Install with: pip install -r requirements-full.txt
+# Requires: Visual Studio Build Tools on Windows (for tensorflow/torch)
+
+-r requirements.txt
+
+# Heavy ML - install only if needed
+# tensorflow>=2.15.0
+# transformers>=4.35.0
+# torch>=2.1.0
