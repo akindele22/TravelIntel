@@ -7,13 +7,27 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Database Configuration
-DATABASE_CONFIG = {
-    'host': os.getenv('DB_HOST', 'localhost'),
-    'port': os.getenv('DB_PORT', '5432'),
-    'database': os.getenv('DB_NAME', 'travel_advisories'),
-    'user': os.getenv('DB_USER', 'postgres'),
-    'password': os.getenv('DB_PASSWORD', 'ApexB')
-}
+# The application supports two modes:
+#  - PostgreSQL (preferred for production): set DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD
+#  - SQLite (default fallback for local/dev): set DB_TYPE=sqlite (or leave unset)
+
+DB_TYPE = os.getenv('DB_TYPE', os.getenv('DATABASE_TYPE', 'sqlite')).lower()
+
+if DB_TYPE in ('postgres', 'postgresql'):
+    DATABASE_CONFIG = {
+        'type': 'postgres',
+        'host': os.getenv('DB_HOST', 'localhost'),
+        'port': int(os.getenv('DB_PORT', '5432')),
+        'database': os.getenv('DB_NAME', 'travel_advisories'),
+        'user': os.getenv('DB_USER', 'postgres'),
+        'password': os.getenv('DB_PASSWORD', ''),
+    }
+else:
+    # SQLite fallback - file path configurable via DB_PATH env var
+    DATABASE_CONFIG = {
+        'type': 'sqlite',
+        'path': os.getenv('DB_PATH', 'travel_advisories.db')
+    }
 
 # Proxy Configuration
 PROXY_CONFIG = {

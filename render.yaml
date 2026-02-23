@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: travelintel-web
+    env: python
+    plan: free
+    branch: main
+    buildCommand: pip install -r requirements.txt && playwright install chromium || true
+    startCommand: streamlit run dashboard.py --server.port $PORT --server.address 0.0.0.0
+  - type: worker
+    name: travelintel-worker
+    env: python
+    plan: free
+    branch: main
+    buildCommand: pip install -r requirements.txt && playwright install chromium || true
+    startCommand: python run_all.py
+
+# Notes:
+# - Provide DB credentials via Render environment variables: DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD
+# - If Playwright scraping is required at runtime Render's stock environment may not support the necessary browsers; use the Dockerfile option for full Playwright compatibility.
