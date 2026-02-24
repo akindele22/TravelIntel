@@ -23,7 +23,8 @@ DATABASE_CONFIG = {
     # ``database.connect()``; otherwise individual components below are used.
     'url': os.getenv('DB_URL', ''),
 
-    'host': os.getenv('DB_HOST', 'localhost'),
+    'host': os.getenv('DB_HOST', 'postgresql://traveldb_beh4_user:O3kEpjP135z4iGsNs6v1IWSxxfstuCc9@dpg-d6endrp5pdvs73fv9sb0-a.oregon-postgres.render.com/traveldb_beh4
+'),
     'port': int(os.getenv('DB_PORT', '5432')),
     'database': os.getenv('DB_NAME', 'travel_advisories'),
     'user': os.getenv('DB_USER', 'postgres'),
