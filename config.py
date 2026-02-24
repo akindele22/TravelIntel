@@ -6,28 +6,29 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Database Configuration
-# The application supports two modes:
-#  - PostgreSQL (preferred for production): set DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD
-#  - SQLite (default fallback for local/dev): set DB_TYPE=sqlite (or leave unset)
+# Database Configuration (PostgreSQL only)
+#
+# In production the app connects to a PostgreSQL instance.  Set the
+# following environment variables in your deployment:
+#
+#   DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD
+#
+# The older SQLite fallback has been removed; if you need a lightweight
+# local database for testing, set up a Postgres container or use the
+# `travel_advisories.db` file manually.
 
-DB_TYPE = os.getenv('DB_TYPE', os.getenv('DATABASE_TYPE', 'sqlite')).lower()
+DATABASE_CONFIG = {
+    # A complete connection URL (Render sets ``DATABASE_URL`` automatically for
+    # managed Postgres instances).  If provided it will take precedence in
+    # ``database.connect()``; otherwise individual components below are used.
+    'url': os.getenv('DATABASE_URL', ''),
 
-if DB_TYPE in ('postgres', 'postgresql'):
-    DATABASE_CONFIG = {
-        'type': 'postgres',
-        'host': os.getenv('DB_HOST', 'localhost'),
-        'port': int(os.getenv('DB_PORT', '5432')),
-        'database': os.getenv('DB_NAME', 'travel_advisories'),
-        'user': os.getenv('DB_USER', 'postgres'),
-        'password': os.getenv('DB_PASSWORD', ''),
-    }
-else:
-    # SQLite fallback - file path configurable via DB_PATH env var
-    DATABASE_CONFIG = {
-        'type': 'sqlite',
-        'path': os.getenv('DB_PATH', 'travel_advisories.db')
-    }
+    'host': os.getenv('DB_HOST', 'localhost'),
+    'port': int(os.getenv('DB_PORT', '5432')),
+    'database': os.getenv('DB_NAME', 'travel_advisories'),
+    'user': os.getenv('DB_USER', 'postgres'),
+    'password': os.getenv('DB_PASSWORD', ''),
+}
 
 # Proxy Configuration
 PROXY_CONFIG = {

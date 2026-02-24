@@ -9,8 +9,9 @@ from datetime import datetime, timedelta
 
 import pandas as pd
 import streamlit as st
+import config
 
-from database_sqlite import DatabaseHandler
+from db_factory import DatabaseHandler
 from data_cleaner import DataCleaner
 from ai_predictor import InsightAnalyzer
 # nlp_vectorizer import removed because the dashboard doesn't actually use it;
@@ -20,18 +21,36 @@ from ai_predictor import InsightAnalyzer
 
 st.set_page_config(page_title="Travel Security Dashboard", layout="wide")
 
+# show which database configuration we're using (helpful in deployment)
+try:
+    dbconf = config.DATABASE_CONFIG
+    st.sidebar.markdown("**DB:** {}@{}:{}".format(
+        dbconf.get('database',''),
+        dbconf.get('host',''),
+        dbconf.get('port','')
+    ))
+except Exception:
+    pass
+
 
 @st.cache_data(show_spinner=False)
 def load_data(country_filter=None, source_filter=None, days_back: int = 365):
-    db = DatabaseHandler()
     try:
+        db = DatabaseHandler()
         advisories = db.get_advisories(
             country=country_filter,
             source=source_filter,
             limit=5000,
         )
+    except Exception as e:
+        # show error in UI for easier debugging when DB isn't reachable
+        st.error(f"Database error: {e}")
+        return pd.DataFrame()
     finally:
-        db.close()
+        try:
+            db.close()
+        except Exception:
+            pass
 
     if not advisories:
         return pd.DataFrame()

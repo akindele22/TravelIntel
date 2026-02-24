@@ -64,8 +64,12 @@ def main() -> None:
 
     print("\nAll steps completed successfully.")
     print("Launching Streamlit dashboard...")
-    # spawn streamlit in new process; do not wait for it
-    subprocess.Popen([sys.executable, "-m", "streamlit", "run", "dashboard.py"])
+    # spawn streamlit in new process; do not wait for it.  forward any extra
+    # command-line arguments so callers can specify port/address etc.
+    cmd = [sys.executable, "-m", "streamlit", "run", "dashboard.py"]
+    if len(sys.argv) > 1:
+        cmd.extend(sys.argv[1:])
+    subprocess.Popen(cmd)
     print("Dashboard should be reachable at http://localhost:8501")
 
 

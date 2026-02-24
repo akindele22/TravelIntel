@@ -4,7 +4,7 @@ Main Orchestration Script - Simplified with reliable scraper
 import time
 from typing import List, Dict
 from scrapers_simple import SimpleAdvisoryScraper
-from database_sqlite import DatabaseHandler
+from database import DatabaseHandler  # always use Postgres handler
 from data_cleaner import DataCleaner
 from tqdm import tqdm
 

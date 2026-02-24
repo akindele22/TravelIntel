@@ -78,17 +78,35 @@ playwright install chromium
 
 ### 3. Set Up Database
 
-Create a PostgreSQL database:
+The project requires PostgreSQL.  Before running any scripts, set the
+following environment variables (for local development this can be done via
+an `.env` file).  You may either provide a full ``DATABASE_URL`` (Render's
+managed add‑on supplies this automatically) or define the individual fields
+below:
+
+```bash
+export DATABASE_URL="postgres://user:pass@host:5432/travel_advisories"
+
+# (or set components separately)
+export DB_HOST=<your-host>
+export DB_PORT=<your-port>          # usually 5432
+export DB_NAME=travel_advisories
+export DB_USER=<username>
+export DB_PASSWORD=<password>
+```
+
+Create the Postgres database manually or use the helper script:
 
 ```sql
 CREATE DATABASE travel_advisories;
 ```
 
-Or use the setup script:
-
 ```bash
 python setup_database.py
 ```
+
+On Render you’ll add the same variables under *Environment* and point the
+pool at a managed Postgres instance.
 
 ### 4. Configure Environment
 

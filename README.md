@@ -11,6 +11,12 @@ deployment:
 python run_all.py
 ```
 
-When the script completes you’ll have scraped data in the database and all
-checks passing; start the dashboard with `streamlit run dashboard.py` to
-view the results.
+When the script completes you’ll have scraped data in the Postgres database
+and all checks passing; the dashboard will launch automatically so you can
+inspect the results.  On deployed platforms such as Render you can set the
+start command to `python run_all.py` to guarantee the database is populated
+before the web service begins handling requests.
+
+For Render's managed Postgres service the platform will inject a
+``DATABASE_URL`` environment variable.  Our configuration honors that URL or
+falls back to the individual ``DB_*`` variables described in the QUICKSTART.
