@@ -5,6 +5,7 @@ services:
     plan: free
     branch: main
     buildCommand: pip install -r requirements.txt && playwright install chromium || true
+
     # Run the full pipeline before launching the dashboard so the database is
     # populated on every deploy/restart.  Using run_all.py also prevents the
     # "no advisories" issue when the DB is empty.
@@ -21,6 +22,8 @@ services:
     #       - key: DATABASE_URL
     #         fromDatabase:
     #           name: travelintel-db
+
+    startCommand: streamlit run dashboard.py --server.port $PORT --server.address 0.0.0.0
 
 # background "worker" services are not available on the free plan.
 # Instead you can either
