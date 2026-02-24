@@ -1,7 +1,7 @@
 """
 Demo Data Generator - Creates sample travel advisories for testing
 """
-from database_sqlite import DatabaseHandler
+from database import DatabaseHandler  # Postgres only
 from data_cleaner import DataCleaner
 from datetime import datetime, timedelta
 import random

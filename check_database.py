@@ -1,7 +1,7 @@
 """
 Quick script to check if database has data
 """
-from database_sqlite import DatabaseHandler
+from database import DatabaseHandler  # replacing sqlite import
 
 db = DatabaseHandler()
 

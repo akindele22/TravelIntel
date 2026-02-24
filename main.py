@@ -12,7 +12,7 @@ from scrapers import (
     IATAScraper,
     CanadaTravelScraper
 ) 
-from database_sqlite import DatabaseHandler
+from db_factory import DatabaseHandler
 from data_cleaner import DataCleaner
 import config
 from tqdm import tqdm

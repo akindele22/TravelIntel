@@ -5,7 +5,26 @@ services:
     plan: free
     branch: main
     buildCommand: pip install -r requirements.txt && playwright install chromium || true
+
+    # Run the full pipeline before launching the dashboard so the database is
+    # populated on every deploy/restart.  Using run_all.py also prevents the
+    # "no advisories" issue when the DB is empty.
+    startCommand: python run_all.py --server.port $PORT --server.address 0.0.0.0
+    # If you're using a blueprint rather than configuring a service manually,
+    # make sure the web service is linked to the managed database.  Render
+    # will then inject a DATABASE_URL env var automatically.  Example in
+    # a blueprint YAML:
+    #
+    # services:
+    #   - type: web
+    #     name: travelintel-web
+    #     envVars:
+    #       - key: DATABASE_URL
+    #         fromDatabase:
+    #           name: travelintel-db
+
     startCommand: streamlit run dashboard.py --server.port $PORT --server.address 0.0.0.0
+
 # background "worker" services are not available on the free plan.
 # Instead you can either
 # 1. run the pipeline script in a cron job (see Render Cron Job feature), or
@@ -17,4 +36,18 @@ services:
 
 # Notes:
 # - Provide DB credentials via Render environment variables: DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD
+#   or, when using a managed database, simply rely on DATABASE_URL (generated
+#   automatically if the service is linked to the DB in a blueprint or via the
+#   UI).
 # - If Playwright scraping is required at runtime Render's stock environment may not support the necessary browsers; use the Dockerfile option for full Playwright compatibility.
+
+# Blueprint example database declaration:
+#
+# databases:
+#   - name: travelintel-db
+#     type: postgresql
+#     plan: free
+#
+# The `fromDatabase` link shown above ties the DATABASE_URL from this DB to the
+# web service, ensuring your application can connect without manual env var
+# configuration.

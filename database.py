@@ -27,7 +27,8 @@ class DatabaseHandler:
                 port=config.DATABASE_CONFIG['port'],
                 database=config.DATABASE_CONFIG['database'],
                 user=config.DATABASE_CONFIG['user'],
-                password=config.DATABASE_CONFIG['password']
+                password=config.DATABASE_CONFIG['password'],
+                url=config.DATABASE_CONFIG['url']  # Use URL if available
             )
             self.conn.autocommit = False
             print("Database connection established")
