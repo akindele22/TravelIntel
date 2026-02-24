@@ -26,11 +26,7 @@ try:
     dbconf = config.DATABASE_CONFIG
     st.sidebar.markdown("**DB:** {}@{}:{}".format(
         dbconf.get('database',''),
-<<<<<<< HEAD
         dbconf.get('host',''),
-=======
-        dbconf.get('host', dbconf.get('path','')),  # path for sqlite
->>>>>>> f36d8be72e1176bf10468b94f275468b7f3cd7cd
         dbconf.get('port','')
     ))
 except Exception:

@@ -158,7 +158,6 @@ launch the dashboard:
 python run_all.py
 ```
 
-<<<<<<< HEAD
 When the script completes you’ll have scraped data in the Postgres database
 and all checks passing; the dashboard will launch automatically so you can
 inspect the results.  On deployed platforms such as Render you can set the
@@ -168,7 +167,6 @@ before the web service begins handling requests.
 For Render's managed Postgres service the platform will inject a
 ``DATABASE_URL`` environment variable.  Our configuration honors that URL or
 falls back to the individual ``DB_*`` variables described in the QUICKSTART.
-=======
 This script runs the scraper tests, NLP tests, grading checks, the full
 pipeline, and then automatically launches Streamlit at
 http://localhost:8501.
@@ -265,4 +263,3 @@ Popular residential proxy providers:
 **Important**: Always comply with website terms of service and use proxies responsibly.
 
 
->>>>>>> f36d8be72e1176bf10468b94f275468b7f3cd7cd
