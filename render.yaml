@@ -9,7 +9,7 @@ services:
       pip install -r requirements.txt
       playwright install chromium || true
       
-    startCommand: bash -c "python run_all.py && streamlit run dashboard.py --server.port $PORT --server.address 0.0.0.0"
+    startCommand: streamlit run dashboard.py --server.port $PORT --server.address 0.0.0.0
 
     envVars:
       - key: DATABASE_URL
