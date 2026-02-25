@@ -1,202 +1,131 @@
 """
-Streamlit dashboard for Travel Security / Safety insights.
-Manual scraping only (no scheduler, no Playwright).
+Main Orchestration Script for Travel Advisory Scraper
+HTTP-only, manual scraping (no Playwright/Selenium)
 """
-
-from datetime import datetime, timedelta
-import pandas as pd
-import streamlit as st
-import traceback
-
-import config
+import time
+from typing import List, Dict
+from scrapers import (
+    USStateDeptScraper,
+    UKFCDOScraper,
+    # SmartTravellerScraper,
+    # IATAScraper,
+    # CanadaTravelScraper
+)
 from db_factory import DatabaseHandler
 from data_cleaner import DataCleaner
-from ai_predictor import InsightAnalyzer
-from main import run_pipeline  # simplified manual pipeline
+import config
+from tqdm import tqdm
 
-# ===============================
-# Streamlit config
-# ===============================
 
-st.set_page_config(page_title="Travel Security Dashboard", layout="wide")
+def scrape_all() -> List[Dict]:
+    """Scrape all configured sources via HTTP requests only"""
+    all_advisories = []
 
-# ===============================
-# SHOW DATABASE INFO (SIDEBAR)
-# ===============================
+    print("\n" + "=" * 60)
+    print("Starting Scraping Process")
+    print("=" * 60)
 
-try:
-    dbconf = config.DATABASE_CONFIG
-    st.sidebar.markdown("**DB:** {}@{}:{}".format(
-        dbconf.get('database',''),
-        dbconf.get('host',''),
-        dbconf.get('port','')
-    ))
-except Exception:
-    pass
+    scrapers = {
+        'us_state_dept': (USStateDeptScraper, config.TARGET_URLS['us_state_dept']),
+        'uk_fcdo': (UKFCDOScraper, config.TARGET_URLS['uk_fcdo']),
+        # 'smartraveller': (SmartTravellerScraper, config.TARGET_URLS['smartraveller']),
+        # 'iata': (IATAScraper, config.TARGET_URLS['iata']),
+        # 'canada': (CanadaTravelScraper, config.TARGET_URLS['canada'])
+    }
 
-# ===============================
-# DATA LOADING
-# ===============================
-
-@st.cache_data(show_spinner=False)
-def load_data(country_filter=None, source_filter=None, days_back: int = 365):
-    """Load advisories from database"""
-    try:
-        db = DatabaseHandler()
-        advisories = db.get_advisories(
-            country=country_filter,
-            source=source_filter,
-            limit=5000,
-        )
-    except Exception as e:
-        st.error(f"Database error: {e}")
-        return pd.DataFrame()
-    finally:
+    for source_name, (scraper_class, url) in tqdm(scrapers.items(), desc="Scraping sources"):
+        print(f"\nScraping {source_name}...")
         try:
-            db.close()
-        except Exception:
-            pass
+            scraper = scraper_class(url=url, use_playwright=False, use_selenium=False)
+            advisories = scraper.scrape()
+            scraper.close()
 
-    if not advisories:
-        return pd.DataFrame()
+            if advisories:
+                print(f"  ✓ Found {len(advisories)} advisories from {source_name}")
+                all_advisories.extend(advisories)
+            else:
+                print(f"  ✗ No advisories found from {source_name}")
+
+            # Rate limiting
+            time.sleep(2)
+
+        except Exception as e:
+            print(f"  ✗ Error scraping {source_name}: {e}")
+            continue
+
+    print(f"\nTotal advisories scraped: {len(all_advisories)}")
+    return all_advisories
+
+
+def clean_data(advisories: List[Dict]) -> List[Dict]:
+    """Clean and normalize scraped data"""
+    print("\n" + "=" * 60)
+    print("Cleaning Data")
+    print("=" * 60)
 
     cleaner = DataCleaner()
     cleaned = cleaner.clean_batch(advisories)
-    df = cleaner.create_dataframe(cleaned)
+    deduplicated = cleaner.deduplicate(cleaned)
 
-    cutoff = datetime.utcnow() - timedelta(days=days_back)
-    if "date" in df.columns:
-        df = df[df["date"] >= cutoff]
+    print(f"Cleaned {len(cleaned)} advisories")
+    print(f"After deduplication: {len(deduplicated)} advisories")
 
-    return df
+    return deduplicated
 
-def classify_dimensions(df: pd.DataFrame) -> pd.DataFrame:
-    """Add security/safety/serenity flags"""
-    analyzer = InsightAnalyzer()
 
-    def row_fn(row: pd.Series):
-        return analyzer._classify_dimensions_row(row)
+def store_data(advisories: List[Dict]):
+    """Store cleaned data in database"""
+    print("\n" + "=" * 60)
+    print("Storing Data in Database")
+    print("=" * 60)
 
-    dims = df.apply(row_fn, axis=1, result_type="expand")
+    db = DatabaseHandler()
+    inserted = db.insert_advisories(advisories)
+    print(f"Inserted/Updated {inserted} advisories in database")
 
-    for col in ['security', 'safety', 'serenity']:
-        if col in dims.columns:
-            dims[col] = dims[col].astype(bool)
+    # Optional: store processed data for analytics
+    processed_data = []
+    for advisory in advisories:
+        processed_data.append({
+            'advisory_id': None,
+            'country_normalized': advisory.get('country_normalized'),
+            'risk_level_normalized': advisory.get('risk_level_normalized'),
+            'risk_score': advisory.get('risk_score'),
+            'keywords': advisory.get('keywords', []),
+            'sentiment_score': advisory.get('sentiment_score', 0.0),
+            'has_security_concerns': advisory.get('has_security_concerns', False),
+            'has_safety_concerns': advisory.get('has_safety_concerns', False),
+            'has_serenity_concerns': advisory.get('has_serenity_concerns', False)
+        })
 
-    return pd.concat([df, dims], axis=1)
+    if processed_data:
+        db.insert_processed_data(processed_data)
+        print(f"Stored {len(processed_data)} processed records")
 
-# ===============================
-# LOCATION SUMMARY
-# ===============================
+    db.close()
 
-def summarize_location(df_country: pd.DataFrame) -> str:
-    """Generate textual insights for a country"""
-    if df_country.empty:
-        return "No recent advisories for this location."
 
-    analyzer = InsightAnalyzer()
-    records = df_country.to_dict(orient="records")
-    example_country = df_country["country_normalized"].iloc[0]
-    insight = analyzer.summarize_country(records, example_country)
+def run_pipeline():
+    """Run the full pipeline manually"""
+    print("\n" + "=" * 60)
+    print("TRAVEL ADVISORY SCRAPER PIPELINE")
+    print("=" * 60)
 
-    if not insight:
-        return "No recent advisories for this location."
+    try:
+        # Step 1: Scrape
+        advisories = scrape_all()
+        if not advisories:
+            print("No advisories scraped. Exiting.")
+            return
 
-    parts = []
-    grade = insight.risk_grade or "U"
-    parts.append(f"Overall risk rating: **{grade}** ({insight.risk_level_text}).")
-    if insight.has_security_issues:
-        parts.append("**Security** issues reported.")
-    if insight.has_safety_issues:
-        parts.append("**Safety** issues reported.")
-    if insight.has_serenity_issues:
-        parts.append("**Serenity** impacted.")
-    if not (insight.has_security_issues or insight.has_safety_issues or insight.has_serenity_issues):
-        parts.append("No major concerns mentioned.")
-    if insight.latest_summary:
-        parts.append(f'Most recent advisory: “{insight.latest_summary}”')
-    if insight.security_highlights:
-        parts.append("\n**Security highlights:**")
-        for h in insight.security_highlights:
-            parts.append(f"- {h}")
-    if insight.dos:
-        parts.append("\n**Do's:**")
-        for d in insight.dos:
-            parts.append(f"- {d}")
-    if insight.donts:
-        parts.append("\n**Don'ts:**")
-        for d in insight.donts:
-            parts.append(f"- {d}")
+        # Step 2: Clean
+        cleaned_advisories = clean_data(advisories)
 
-    return "\n".join(parts)
+        # Step 3: Store
+        store_data(cleaned_advisories)
 
-# ===============================
-# MAIN UI
-# ===============================
+        print("\nPipeline completed successfully!")
 
-def main():
-    st.title("🌍 Travel Security & Safety Dashboard")
-
-    # --- Manual Pipeline Trigger ---
-    st.sidebar.markdown("---")
-    st.sidebar.subheader("Data Pipeline")
-
-    if st.sidebar.button("🔄 Run Pipeline Now"):
-        with st.spinner("Running pipeline..."):
-            try:
-                run_pipeline()
-                st.sidebar.success("Pipeline completed.")
-                st.cache_data.clear()
-                st.experimental_rerun()
-            except Exception as e:
-                st.sidebar.error(f"Pipeline failed: {e}")
-                st.error(traceback.format_exc())
-
-    # --- Filters ---
-    st.sidebar.header("Filters")
-    country_input = st.sidebar.text_input("Country (optional)", value="")
-    source_input = st.sidebar.selectbox(
-        "Source",
-        options=[
-            "All",
-            "US State Department",
-            "UK FCDO",
-            "Smart Traveller (Australia)",
-            "IATA Travel Centre",
-            "Canada Travel",
-        ],
-    )
-    days_back = st.sidebar.slider("Look back (days)", 30, 730, 365, 30)
-    source_filter = None if source_input == "All" else source_input
-    country_filter = country_input.strip() or None
-
-    # --- Load & process data ---
-    df = load_data(country_filter, source_filter, days_back)
-    if df.empty:
-        st.info("No advisories found.")
-        return
-    df = classify_dimensions(df)
-
-    # --- KPIs ---
-    col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Advisories", len(df))
-    col2.metric("High Risk", int((df.get("risk_score", 0) >= 3).sum()))
-    col3.metric("Countries", df["country_normalized"].nunique())
-    col4.metric("Last Updated", df["date"].max().strftime("%Y-%m-%d"))
-
-    # --- Insights ---
-    st.subheader("Location Insights")
-    countries = sorted(df["country_normalized"].dropna().unique())
-    selected = st.selectbox("Focus country", countries)
-    df_country = df[df["country_normalized"] == selected]
-    st.markdown(summarize_location(df_country))
-
-    # --- Recent advisories ---
-    st.markdown("### Recent Advisories")
-    st.dataframe(
-        df_country.sort_values("date", ascending=False),
-        use_container_width=True
-    )
-
-if __name__ == "__main__":
-    main()
+    except Exception as e:
+        print(f"\nError in pipeline: {e}")
+        raise
