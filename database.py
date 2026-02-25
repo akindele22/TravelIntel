@@ -23,7 +23,7 @@ class DatabaseHandler:
         """Establish database connection"""
         try:
             # If DATABASE_URL is set (e.g., by Render), use it directly
-            db_url = config.DATABASE_CONFIG.get('DB_URL', '')
+            db_url = config.DATABASE_CONFIG.get('DATABASE_URL', '')
             if db_url:
                 self.conn = psycopg2.connect(db_url)
             else:
