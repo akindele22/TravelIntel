@@ -6,9 +6,9 @@ from proxy_manager import ProxyManager
 from scrapers import (
     USStateDeptScraper,
     UKFCDOScraper,
-    SmartTravellerScraper,
+    #SmartTravellerScraper,
     IATAScraper,
-    CanadaTravelScraper
+    #CanadaTravelScraper
 )
 import config
 
@@ -71,9 +71,7 @@ def main():
     scrapers_to_test = [
         (USStateDeptScraper, config.TARGET_URLS['us_state_dept'], 'US State Department'),
         (UKFCDOScraper, config.TARGET_URLS['uk_fcdo'], 'UK FCDO'),
-        (SmartTravellerScraper, config.TARGET_URLS['smartraveller'], 'Smart Traveller'),
         (IATAScraper, config.TARGET_URLS['iata'], 'IATA Travel Centre'),
-        (CanadaTravelScraper, config.TARGET_URLS['canada'], 'Canada Travel'),
     ]
     
     results = {}
