@@ -19,6 +19,31 @@ from ai_predictor import InsightAnalyzer
 # startup.  NLP features are exercised in separate validation/tests.
 
 
+# --- Manual Pipeline Trigger ---
+st.sidebar.markdown("---")
+st.sidebar.subheader("Data Pipeline")
+
+if st.sidebar.button("🔄 Run Scraper Now"):
+    with st.spinner("Running scraper... this may take a minute."):
+        try:
+            result = subprocess.run(
+                ["python", "run_all.py"],
+                capture_output=True,
+                text=True
+            )
+
+            if result.returncode == 0:
+                st.sidebar.success("Scraping completed successfully.")
+                st.cache_data.clear()  # clear cached data
+                st.rerun()
+            else:
+                st.sidebar.error("Scraper failed.")
+                st.sidebar.text(result.stderr)
+
+        except Exception as e:
+            st.sidebar.error(f"Error running scraper: {e}")
+
+
 st.set_page_config(page_title="Travel Security Dashboard", layout="wide")
 
 # show which database configuration we're using (helpful in deployment)
