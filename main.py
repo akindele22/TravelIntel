@@ -195,7 +195,7 @@ def main():
     if args.schedule > 0:
         pipeline.run_full_pipeline()
     else:
-        continue
+        pipeline.run_full_pipeline()
 
 
 if __name__ == '__main__':
