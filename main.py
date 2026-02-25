@@ -193,9 +193,9 @@ def main():
     pipeline = TravelAdvisoryPipeline()
     
     if args.schedule > 0:
-        pipeline.run_scheduled(interval_hours=args.schedule)
-    else:
         pipeline.run_full_pipeline()
+    else:
+        continue
 
 
 if __name__ == '__main__':
