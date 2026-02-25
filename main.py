@@ -44,9 +44,9 @@ class TravelAdvisoryPipeline:
         self.scrapers = {
             'us_state_dept': (USStateDeptScraper, config.TARGET_URLS['us_state_dept']),
             'uk_fcdo': (UKFCDOScraper, config.TARGET_URLS['uk_fcdo']),
-            'smartraveller': (SmartTravellerScraper, config.TARGET_URLS['smartraveller']),
+            #'smartraveller': (SmartTravellerScraper, config.TARGET_URLS['smartraveller']),
             'iata': (IATAScraper, config.TARGET_URLS['iata']),
-            'canada': (CanadaTravelScraper, config.TARGET_URLS['canada'])
+            #'canada': (CanadaTravelScraper, config.TARGET_URLS['canada'])
         }
     
     def scrape_all(self) -> List[Dict]:
