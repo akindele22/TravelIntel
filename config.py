@@ -21,7 +21,7 @@ DATABASE_CONFIG = {
     # A complete connection URL (Render sets ``DATABASE_URL`` automatically for
     # managed Postgres instances).  If provided it will take precedence in
     # ``database.connect()``; otherwise individual components below are used.
-    'url': os.getenv('DB_URL', ''),
+    'url': os.getenv('DATABASE_URL', ''),
 
     'host': os.getenv('DB_HOST', ''),
     'port': int(os.getenv('DB_PORT', 5432)) if os.getenv('DB_PORT') else 5432,
