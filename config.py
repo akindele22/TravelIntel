@@ -57,7 +57,7 @@ SCRAPER_CONFIG = {
 TARGET_URLS = {
     'us_state_dept': 'https://travel.state.gov/content/travel/en/traveladvisories/traveladvisories.html',
     'uk_fcdo': 'https://www.gov.uk/foreign-travel-advice',
-    'iata': 'https://www.iatatravelcentre.com/world.php'  # Additional source
+    #'iata': 'https://www.iatatravelcentre.com/world.php'  # Additional source
 }
 
 # AI Model Configuration
