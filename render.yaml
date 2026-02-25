@@ -6,11 +6,12 @@ services:
     branch: main
 
     buildCommand: |
+      pip install --upgrade pip
       pip install -r requirements.txt
+      python -m playwright install
       python -m playwright install chromium
-      python -m playwright install-deps chromium
-
-    startCommand: python run_all.py
+    
+    startCommand: streamlit run dashboard.py --server.port $PORT --server.address 0.0.0.0
 
     envVars:
       - key: DATABASE_URL
