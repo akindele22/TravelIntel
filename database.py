@@ -22,6 +22,7 @@ class DatabaseHandler:
     def connect(self):
         try:
             db_url = config.DATABASE_CONFIG['url']
+            
     
             if db_url:
                 self.conn = psycopg2.connect(db_url)
@@ -36,6 +37,7 @@ class DatabaseHandler:
     
             self.conn.autocommit = False
             print("Database connection established")
+            print("DB URL:", config.DATABASE_CONFIG['url'])
     
         except Exception as e:
             print(f"Error connecting to database: {e}")
