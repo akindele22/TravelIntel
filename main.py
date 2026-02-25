@@ -7,10 +7,7 @@ from typing import List, Dict
 from proxy_manager import ProxyManager
 from scrapers import (
     USStateDeptScraper,
-    UKFCDOScraper,
-    SmartTravellerScraper,
-    IATAScraper,
-    CanadaTravelScraper
+    UKFCDOScraper
 ) 
 from db_factory import DatabaseHandler
 from data_cleaner import DataCleaner
@@ -45,7 +42,7 @@ class TravelAdvisoryPipeline:
             'us_state_dept': (USStateDeptScraper, config.TARGET_URLS['us_state_dept']),
             'uk_fcdo': (UKFCDOScraper, config.TARGET_URLS['uk_fcdo']),
             #'smartraveller': (SmartTravellerScraper, config.TARGET_URLS['smartraveller']),
-            'iata': (IATAScraper, config.TARGET_URLS['iata']),
+            #'iata': (IATAScraper, config.TARGET_URLS['iata']),
             #'canada': (CanadaTravelScraper, config.TARGET_URLS['canada'])
         }
     
