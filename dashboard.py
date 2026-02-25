@@ -3,7 +3,7 @@ Streamlit dashboard for Travel Security / Safety insights.
 Production-ready version with background pipeline scheduler.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta,UTC
 import pandas as pd
 import streamlit as st
 import threading
@@ -38,10 +38,10 @@ def pipeline_scheduler():
     """
     while True:
         try:
-            print(f"[{datetime.utcnow()}] Running pipeline...")
+           print(f"[{datetime.now(UTC)}] Running pipeline...")
             pipeline = TravelAdvisoryPipeline()
             pipeline.run_full_pipeline()
-            print(f"[{datetime.utcnow()}] Pipeline finished successfully.")
+            print(f"[{datetime.now(UTC)}] Pipeline finished successfully.")
         except Exception:
             print("Pipeline error:")
             traceback.print_exc()
