@@ -1,50 +1,62 @@
 FROM python:3.11-slim
 
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=off \
-    POETRY_VIRTUALENVS_CREATE=false
+# Prevent Python from writing .pyc files
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
-WORKDIR /app
-
-# Install system deps required by Playwright and common libraries
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
+# Install system dependencies required by Playwright
+RUN apt-get update && apt-get install -y \
+    curl \
     wget \
     gnupg \
-    ca-certificates \
+    unzip \
     libnss3 \
     libatk1.0-0 \
     libatk-bridge2.0-0 \
     libcups2 \
+    libdrm2 \
     libxkbcommon0 \
-    libx11-xcb1 \
-    libxcb1 \
     libxcomposite1 \
     libxdamage1 \
+    libxfixes3 \
     libxrandr2 \
     libgbm1 \
     libasound2 \
-    libpangocairo-1.0-0 \
-    libgtk-3-0 \
-    libdrm2 \
     fonts-liberation \
+    libappindicator3-1 \
+    xdg-utils \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy lock/requirements early for better caching
-COPY requirements.txt /app/requirements.txt
+# Create non-root user (security best practice)
+RUN useradd -m appuser
 
-RUN pip install --upgrade pip setuptools wheel
-RUN pip install -r /app/requirements.txt
+# Set working directory
+WORKDIR /app
 
-# Install Playwright browsers (this can take some time)
-RUN python -m playwright install chromium
+# Copy requirements first (Docker layer caching)
+COPY requirements.txt .
 
-# Copy application code
-COPY . /app
+# Install Python dependencies
+RUN pip install --upgrade pip \
+    && pip install --no-cache-dir -r requirements.txt
 
-# Expose Streamlit default port
+# Install Playwright browsers
+RUN playwright install chromium
+
+# Copy project files
+COPY . .
+
+# Change ownership
+RUN chown -R appuser:appuser /app
+
+# Switch to non-root user
+USER appuser
+
+# Expose Streamlit port
 EXPOSE 8501
 
-# Default command (can be overridden on Render)
-CMD ["streamlit", "run", "dashboard.py", "--server.port", "8501", "--server.address", "0.0.0.0"]
+# Healthcheck (important for production)
+HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health || exit 1
+
+# Start Streamlit
+CMD ["streamlit", "run", "dashboard.py", "--server.port=8501", "--server.address=0.0.0.0"]
