@@ -4,7 +4,7 @@ Read-only UI connected to PostgreSQL
 """
 
 import os
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import pandas as pd
 import psycopg2
@@ -34,6 +34,32 @@ if not DATABASE_URL:
 
 def get_connection():
     return psycopg2.connect(DATABASE_URL)
+
+
+# ✅ NEW: Connection Test Block
+def test_connection():
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT NOW();")
+        result = cur.fetchone()
+        cur.close()
+        conn.close()
+        return result[0]
+    except Exception as e:
+        return str(e)
+
+
+# Show connection status in sidebar
+st.sidebar.header("Database Status")
+connection_status = test_connection()
+
+if isinstance(connection_status, str):
+    st.sidebar.error(f"Connection Failed: {connection_status}")
+    st.stop()
+else:
+    st.sidebar.success("Database Connected")
+    st.sidebar.caption(f"Connected at: {connection_status}")
 
 
 @st.cache_data(ttl=300)
